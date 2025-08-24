@@ -1,1 +1,39 @@
-<svg xmlns='http://www.w3.org/2000/svg' width='320' height='120' viewBox='0 0 320 120'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#ffd6df'/><stop offset='1' stop-color='#fff1c9'/></linearGradient></defs><rect width='320' height='120' rx='18' fill='#0b0b12'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='28' font-family='Arial' fill='url(#g)'>IZ HAIR TREND</text></svg>
+<svg xmlns='http://www.w3.org/2000/svg' width='640' height='240' viewBox='0 0 640 240'>
+  <defs>
+    <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+      <stop offset='0' stop-color='#ffd6df'/>
+      <stop offset='1' stop-color='#fff1c9'/>
+    </linearGradient>
+    <filter id='glow' x='-50%' y='-50%' width='200%' height='200%'>
+      <feGaussianBlur stdDeviation='3' result='b'/>
+      <feMerge>
+        <feMergeNode in='b'/>
+        <feMergeNode in='b'/>
+        <feMergeNode in='SourceGraphic'/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background transparent; keep a soft rounded rect guide for dark site previews -->
+  <rect x='8' y='8' width='624' height='224' rx='28' fill='none' stroke='rgba(255,255,255,0.06)'/>
+
+  <!-- Monogram ŽI -->
+  <g transform='translate(56,92) scale(1.18)'>
+    <text x='0' y='0' font-family='Segoe UI, Inter, Arial, sans-serif' font-weight='700'
+          font-size='92' fill='none' stroke='url(#g)' stroke-width='2.5' letter-spacing='2'
+          filter='url(#glow)'>ŽI</text>
+  </g>
+
+  <!-- Word mark: HAIR TREND -->
+  <g transform='translate(56,166)'>
+    <text x='0' y='0' font-family='Segoe UI, Inter, Arial, sans-serif' font-weight='600'
+          font-size='40' fill='none' stroke='url(#g)' stroke-width='1.8' letter-spacing='10'
+          filter='url(#glow)'>HAIR TREND</text>
+  </g>
+
+  <!-- Signature: IRINA ZILINA (small) -->
+  <g transform='translate(430,56)' opacity='0.95'>
+    <text x='0' y='0' font-family='Segoe UI, Inter, Arial, sans-serif' font-weight='500'
+          font-size='20' fill='url(#g)' letter-spacing='1.8'>IRINA ZILINA</text>
+  </g>
+</svg>
