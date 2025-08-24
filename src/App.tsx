@@ -7,9 +7,13 @@ import { motion, AnimatePresence } from "framer-motion";
 
 /**
  * IZ HAIR TREND — Soft Hair Edition (RU/EN)
- * Fixed: removed `new THREE.Curve()` crash in <Ribbon/> placeholder geometry.
+ * — Мягкая палитра (розовый румянец / шампань / перламутр)
+ * — Формы-ленты как пряди волос, плавное парение и лёгкий параллакс
+ * — Контурный титул по центру + сборка из «осколков» (смягчена)
+ * — RU/EN, CTA, инстаграм, футер с доменом и почтой
  */
 
+// Используем ваш логотип. Экспортируйте приложенный PDF в SVG и положите в /public/iz-logo.svg
 const logoUrl: string | null = "/iz-logo.svg";
 
 type Lang = "ru" | "en";
@@ -56,6 +60,17 @@ const i18n: Record<Lang, any> = {
     footer: { domain: "izhairtrend.shop", email: "support@izhairtrend.shop", insta: "Instagram portfolio" },
   },
 };
+
+function useWindowSize() {
+  const [size, set] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const on = () => set({ w: window.innerWidth, h: window.innerHeight });
+    on();
+    window.addEventListener("resize", on);
+    return () => window.removeEventListener("resize", on);
+  }, []);
+  return size;
+}
 
 // ——— Цвета (мягкие) ———
 const PALETTE = {
@@ -128,14 +143,24 @@ function Shards({ count = 900, duration = 2.6 }) {
 // ——— Ленты как пряди волос ———
 function HairRibbons({ count = 3 }: { count?: number }) {
   const group = useRef<THREE.Group>(null!);
-  useFrame((state) => {
+  const tRef = useRef(0);
+  useFrame((state, delta) => {
+    tRef.current += delta * 0.5;
     const x = (state.pointer.x || 0) * 0.25;
     const y = (state.pointer.y || 0) * 0.15;
     group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, y, 0.02);
     group.current.rotation.y = THREE.MathUtils.lerp(group.current.rotation.y, x, 0.02);
   });
+
   const items = useMemo(() => new Array(count).fill(0).map((_, i) => ({ key: i, phase: Math.random() * Math.PI * 2 })), [count]);
-  return <group ref={group}>{items.map(({ key, phase }) => <Ribbon key={key} phase={phase} />)}</group>;
+
+  return (
+    <group ref={group}>
+      {items.map(({ key, phase }) => (
+        <Ribbon key={key} phase={phase} />
+      ))}
+    </group>
+  );
 }
 
 function Ribbon({ phase = 0 }: { phase?: number }) {
@@ -160,7 +185,7 @@ function Ribbon({ phase = 0 }: { phase?: number }) {
 
   return (
     <mesh ref={mesh} position={[0, 0, -0.5]}>
-      {/* placeholder вместо недопустимого new THREE.Curve() */}
+      {/* FIX: placeholder вместо недопустимого new THREE.Curve() */}
       <bufferGeometry />
       <meshPhysicalMaterial
         transmission={0.8}
@@ -222,7 +247,7 @@ function Abstracts() {
   );
 }
 
-// ——— Переворот при скролле ———
+// ——— Переворот при скролле (исправлено на useScroll().offset) ———
 function FlipOnScroll() {
   const ref = useRef<THREE.Group>(null!);
   const data = useScroll();
@@ -297,7 +322,13 @@ function LanguageSwitcher({ lang, setLang }: { lang: Lang; setLang: (l: Lang) =>
   return (
     <div className="fixed top-4 right-4 z-50 backdrop-blur-xl bg-white/10 border border-white/10 rounded-2xl px-3 py-2 flex gap-2 shadow-lg">
       {(["ru", "en"] as Lang[]).map((L) => (
-        <button key={L} onClick={() => setLang(L)} className={`text-sm font-medium tracking-wide px-2 py-1 rounded-lg transition ${lang === L ? "bg-white/15 text-white" : "text-white/80 hover:text-white"}`}>
+        <button
+          key={L}
+          onClick={() => setLang(L)}
+          className={`text-sm font-medium tracking-wide px-2 py-1 rounded-lg transition ${
+            lang === L ? "bg-white/15 text-white" : "text-white/80 hover:text-white"
+          }`}
+        >
           {L.toUpperCase()}
         </button>
       ))}
@@ -307,7 +338,14 @@ function LanguageSwitcher({ lang, setLang }: { lang: Lang; setLang: (l: Lang) =>
 
 function PrimaryButton({ children, onClick, className = "" }: any) {
   return (
-    <button onClick={onClick} className={`group relative inline-flex items-center justify-center px-6 py-3 rounded-2xl overflow-hidden font-semibold tracking-wide transition hover:scale-[1.02] active:scale-95 ${className}`} style={{ background: "radial-gradient(120% 120% at 50% 0%, rgba(255,214,223,0.45) 0%, rgba(255,241,201,0.28) 50%, rgba(255,241,201,0.12) 100%)" }}>
+    <button
+      onClick={onClick}
+      className={`group relative inline-flex items-center justify-center px-6 py-3 rounded-2xl overflow-hidden font-semibold tracking-wide transition hover:scale-[1.02] active:scale-95 ${className}`}
+      style={{
+        background:
+          "radial-gradient(120% 120% at 50% 0%, rgba(255,214,223,0.45) 0%, rgba(255,241,201,0.28) 50%, rgba(255,241,201,0.12) 100%)",
+      }}
+    >
       <span className="absolute inset-0 bg-gradient-to-r from-[#ffd9e6]/40 to-[#fff1c7]/40 opacity-50 blur-2xl" />
       <span className="absolute inset-0 border border-white/15 rounded-2xl" />
       <span className="relative text-white">{children}</span>
@@ -331,8 +369,14 @@ export default function App() {
       {/* Background */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0b0b12] via-[#0d0c12] to-[#0b0b12]" />
-        <div className="absolute -top-1/3 left-1/2 -translate-x-1/2 w-[120vmax] h-[120vmax] rounded-full opacity-40 blur-3xl" style={{ background: "radial-gradient(circle at 50% 50%, #ffd6df 0%, transparent 60%)" }} />
-        <div className="absolute top-1/2 right-0 w-[60vmax] h-[60vmax] rounded-full opacity-25 blur-3xl" style={{ background: "radial-gradient(circle at 50% 50%, #fff1c9 0%, transparent 60%)" }} />
+        <div
+          className="absolute -top-1/3 left-1/2 -translate-x-1/2 w-[120vmax] h-[120vmax] rounded-full opacity-40 blur-3xl"
+          style={{ background: "radial-gradient(circle at 50% 50%, #ffd6df 0%, transparent 60%)" }}
+        />
+        <div
+          className="absolute top-1/2 right-0 w-[60vmax] h-[60vmax] rounded-full opacity-25 blur-3xl"
+          style={{ background: "radial-gradient(circle at 50% 50%, #fff1c9 0%, transparent 60%)" }}
+        />
       </div>
 
       <LanguageSwitcher lang={lang} setLang={setLang} />
@@ -353,17 +397,42 @@ export default function App() {
       <main className="relative z-10 flex flex-col items-center">
         {/* HERO */}
         <section className="w-full flex flex-col items-center justify-center text-center pt-28 pb-20 gap-6">
-          {logoUrl ? <img src={logoUrl} alt="IZ Hair Trend logo" className="w-44 h-auto opacity-90 drop-shadow" /> : null}
-          <div className="max-w-3xl px-6"><p className="text-white/80 text-base md:text-lg">{copy.hero.sub}</p></div>
+          {logoUrl ? (
+            <img src={logoUrl} alt="IZ Hair Trend logo" className="w-44 h-auto opacity-90 drop-shadow" />
+          ) : null}
+
+          <div className="max-w-3xl px-6">
+            <p className="text-white/80 text-base md:text-lg">{copy.hero.sub}</p>
+          </div>
+
           <PrimaryButton onClick={() => setLaunched(true)}>{copy.hero.cta}</PrimaryButton>
-          <AnimatePresence>{launched && (<motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }} className="mt-3 px-4 py-2 rounded-xl bg-white/10 border border-white/15 backdrop-blur-xl"><span className="text-sm text-white/85">{lang === "ru" ? "Система запущена — прокрутите вниз, чтобы увидеть детали и подключиться." : "System launched — scroll to explore details and connect."}</span></motion.div>)}</AnimatePresence>
+
+          <AnimatePresence>
+            {launched && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6 }}
+                className="mt-3 px-4 py-2 rounded-xl bg-white/10 border border-white/15 backdrop-blur-xl"
+              >
+                <span className="text-sm text-white/85">
+                  {lang === "ru"
+                    ? "Система запущена — прокрутите вниз, чтобы увидеть детали и подключиться."
+                    : "System launched — scroll to explore details and connect."}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </section>
 
         {/* ABOUT */}
         <section className="relative w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 px-6 pb-24">
           <div className="col-span-1 md:col-span-2">
             <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4">{copy.sections.aboutTitle}</h2>
-            <div className="rounded-3xl border border-white/10 bg-white/10 backdrop-blur-xl p-6 leading-relaxed text-white/90">{copy.sections.about}</div>
+            <div className="rounded-3xl border border-white/10 bg-white/10 backdrop-blur-xl p-6 leading-relaxed text-white/90">
+              {copy.sections.about}
+            </div>
           </div>
           {copy.sections.feats.map((f: any, i: number) => (
             <div key={i} className="rounded-3xl border border-white/10 bg-white/10 backdrop-blur-xl p-6">
@@ -378,8 +447,17 @@ export default function App() {
           <h3 className="text-2xl md:text-3xl font-semibold mb-4">{copy.sections.actionTitle}</h3>
           <p className="text-white/80 mb-6">{copy.sections.actionText}</p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <PrimaryButton onClick={() => (window.location.href = "mailto:" + i18n[lang].footer.email)}>{lang === "ru" ? "Связаться" : "Contact"}</PrimaryButton>
-            <a href="https://www.instagram.com/irinazilina.hairtrend" target="_blank" rel="noreferrer" className="px-6 py-3 rounded-2xl border border-white/15 bg-white/10 backdrop-blur-xl text-white/90 hover:text-white transition">{i18n[lang].footer.insta}</a>
+            <PrimaryButton onClick={() => (window.location.href = "mailto:" + i18n[lang].footer.email)}>
+              {lang === "ru" ? "Связаться" : "Contact"}
+            </PrimaryButton>
+            <a
+              href="https://www.instagram.com/irinazilina.hairtrend"
+              target="_blank"
+              rel="noreferrer"
+              className="px-6 py-3 rounded-2xl border border-white/15 bg-white/10 backdrop-blur-xl text-white/90 hover:text-white transition"
+            >
+              {i18n[lang].footer.insta}
+            </a>
           </div>
         </section>
       </main>
